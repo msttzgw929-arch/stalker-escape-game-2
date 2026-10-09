@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1b1430">
+<title>ストーカーお姉さんから逃げろ！</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;overflow:hidden;background:#000;font-family:"Hiragino Maru Gothic ProN","Rounded Mplus 1c","M PLUS Rounded 1c","Hiragino Sans","Noto Sans JP",sans-serif;color:#fff;touch-action:none;overscroll-behavior:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+#hud{position:fixed;left:0;right:0;top:0;padding:calc(env(safe-area-inset-top) + 8px) 12px 0;pointer-events:none;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:5}
+.panel{background:rgba(20,10,35,.55);border:2px solid rgba(255,255,255,.25);border-radius:14px;padding:6px 10px;backdrop-filter:blur(4px);font-weight:800;text-shadow:0 1px 2px #000}
+#time{font-size:20px}
+#sub{font-size:12px;opacity:.9;font-weight:700}
+#meter{width:min(46vw,240px)}
+#meter .lbl{font-size:12px;display:flex;justify-content:space-between}
+#bar{height:12px;border-radius:7px;background:rgba(255,255,255,.18);overflow:hidden;margin-top:3px}
+#barf{height:100%;width:0;background:linear-gradient(90deg,#ffb3d1,#ff5f8f,#ff2b4a);transition:width .2s}
+#lv{font-size:15px;color:#ffd1e3}
+#vig{position:fixed;inset:0;pointer-events:none;z-index:3;box-shadow:inset 0 0 0 0 rgba(255,0,60,0);transition:box-shadow .15s}
+#arrow{position:fixed;z-index:4;pointer-events:none;width:64px;height:64px;margin:-32px 0 0 -32px;display:none}
+#arrow .a{width:0;height:0;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:28px solid #ff5f8f;margin:0 auto;filter:drop-shadow(0 0 4px #000)}
+#arrow .t{font-size:11px;font-weight:800;text-align:center;text-shadow:0 1px 3px #000;margin-top:2px}
+.stick{position:fixed;z-index:6;width:130px;height:130px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.10),rgba(255,255,255,.04));border:3px solid rgba(255,255,255,.45);pointer-events:none;transform:translate(-50%,-50%);opacity:.85}
+.stick .k{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ffc2da 45%,#ff6f9f);box-shadow:0 3px 10px rgba(0,0,0,.5)}
+.stick .cap{position:absolute;left:0;right:0;bottom:-22px;text-align:center;font-size:12px;font-weight:800;text-shadow:0 1px 2px #000;opacity:.9}
+#lookStick .k{background:radial-gradient(circle at 35% 30%,#fff,#c9d8ff 45%,#6f8fff)}
+#touchL,#touchR{position:fixed;top:0;bottom:0;z-index:2;touch-action:none}
+#touchL{left:0;width:50%}#touchR{right:0;width:50%}
+#title,#caught{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#title{background:radial-gradient(ellipse at 50% 30%,#4a2a6a,#160c26 70%);overflow:hidden}
+#title img{height:min(52vh,520px);filter:drop-shadow(0 8px 20px rgba(0,0,0,.6));animation:tb 1.6s ease-in-out infinite}
+@keyframes tb{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-6px) scale(1.01,.99)}}
+#title h1{margin:6px 12px 4px;font-size:clamp(24px,7vw,46px);text-align:center;line-height:1.15;color:#fff;text-shadow:0 3px 0 #ff5f8f,0 6px 16px rgba(0,0,0,.6)}
+#title p{margin:4px 16px;font-size:clamp(12px,3.4vw,16px);text-align:center;opacity:.92;line-height:1.5}
+.btn{margin-top:14px;font:inherit;font-size:22px;font-weight:900;color:#fff;border:none;border-radius:40px;padding:14px 46px;background:linear-gradient(180deg,#ff8fb6,#ff3f7c);box-shadow:0 6px 0 #b2194b,0 10px 24px rgba(0,0,0,.4);cursor:pointer}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #b2194b}
+#caught{display:none;background:transparent;pointer-events:auto;touch-action:none}
+#cTop{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:0;right:0;display:flex;flex-direction:column;align-items:center;pointer-events:none}
+#cMsg{font-size:clamp(20px,6vw,34px);font-weight:900;text-shadow:0 3px 0 #ff3f7c,0 4px 12px #000;text-align:center}
+#cBarW{width:min(70vw,360px);height:16px;border-radius:9px;background:rgba(0,0,0,.4);border:2px solid #fff;margin-top:8px;overflow:hidden}
+#cBar{height:100%;width:0;background:linear-gradient(90deg,#9ff,#3cf);transition:width .1s}
+#faceBox{position:absolute;right:12px;top:calc(env(safe-area-inset-top) + 86px);width:min(28vw,150px);height:min(28vw,150px);border-radius:50%;overflow:hidden;border:4px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.5);background:#fde;pointer-events:none}
+#faceBox canvas{width:100%;height:100%}
+#bubble{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);font-size:clamp(18px,5vw,28px);font-weight:900;color:#ff3f7c;background:#fff;border-radius:22px;padding:8px 18px;box-shadow:0 4px 0 #ff9cc0;pointer-events:none;opacity:0;transition:opacity .2s}
+.slap{position:fixed;z-index:21;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;font-size:26px;color:#fff;text-shadow:0 0 6px #ff3f7c,0 2px 0 #ff3f7c;animation:sl .5s ease-out forwards}
+.ring{position:fixed;z-index:21;pointer-events:none;border:4px solid rgba(255,255,255,.9);border-radius:50%;width:20px;height:20px;transform:translate(-50%,-50%);animation:rg .45s ease-out forwards}
+@keyframes sl{0%{transform:translate(-50%,-50%) scale(.6);opacity:1}100%{transform:translate(-50%,-140%) scale(1.25);opacity:0}}
+@keyframes rg{0%{width:20px;height:20px;opacity:1}100%{width:140px;height:140px;opacity:0}}
+#toast{position:fixed;left:50%;top:22%;transform:translate(-50%,-50%);z-index:8;font-size:clamp(22px,6.5vw,40px);font-weight:900;text-shadow:0 3px 0 #ff3f7c,0 5px 14px #000;pointer-events:none;opacity:0;transition:opacity .3s;text-align:center;white-space:nowrap}
+#flash{position:fixed;inset:0;z-index:19;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+#loading{font-size:14px;opacity:.8;margin-top:8px;min-height:1.2em}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vig"></div>
+<div id="hud" style="display:none">
+  <div class="panel"><div id="time">00:00.0</div><div id="sub">捕まった: 0回</div></div>
+  <div class="panel" id="meter"><div class="lbl"><span id="lv">お腹 Lv.1</span><span id="dist">--m</span></div><div class="lbl" style="margin-top:2px"><span>イライラ</span><span id="fp">0%</span></div><div id="bar"><div id="barf"></div></div></div>
+</div>
+<div id="arrow"><div class="a"></div><div class="t">お姉さん</div></div>
+<div id="toast"></div>
+<div id="touchL"></div><div id="touchR"></div>
+<div class="stick" id="moveStick" style="display:none"><div class="k"></div><div class="cap">いどう</div></div>
+<div class="stick" id="lookStick" style="display:none"><div class="k"></div><div class="cap">むき</div></div>
+<div id="caught"><div id="cTop"><div id="cMsg">つかまった！お腹を連打！</div><div id="cBarW"><div id="cBar"></div></div></div><div id="faceBox"><canvas id="faceCv" width="220" height="220"></canvas></div><div id="bubble"></div></div>
+<div id="flash"></div>
+<div id="title">
+  <img src="assets/body.png" alt="">
+  <h1>ストーカーお姉さん<br>から逃げろ！</h1>
+  <p>左スティックで移動・右スティックで向きを変える<br>捕まったら お腹を連打して脱出！<br><span style="opacity:.75">PC: WASD/矢印キー で移動・ドラッグ で視点</span></p>
+  <button class="btn" id="startBtn">スタート</button>
+  <div id="loading">読み込み中…</div>
+</div>
+<script type="module" src="game.js"></script>
+</body>
+</html>
